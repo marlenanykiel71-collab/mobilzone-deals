@@ -60,22 +60,38 @@ function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "" });
   const [quoteSent, setQuoteSent] = useState(false);
   const [cart, setCart] = useState<Product | null>(null);
-  const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "" });
+  const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
   const [orderSent, setOrderSent] = useState(false);
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
     const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`;
-    window.location.href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
+    const href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
     setQuoteSent(true);
+    const a = document.createElement("a");
+    a.href = href;
+    a.rel = "noopener";
+    a.target = "_self";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const submitOrder = (e: FormEvent) => {
     e.preventDefault();
     if (!cart) return;
-    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena: ${cart.price} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
-    window.location.href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
+    const ship = order.delivery === "Pobranie" ? 27 : 18;
+    const total = cart.price + ship;
+    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena produktu: ${cart.price} zł\nDostawa: ${order.delivery} (${ship} zł)\nRAZEM: ${total} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
+    const href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
     setOrderSent(true);
+    const a = document.createElement("a");
+    a.href = href;
+    a.rel = "noopener";
+    a.target = "_self";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (
@@ -160,7 +176,18 @@ function Index() {
                 <textarea required rows={4} value={quote.damage} onChange={(e) => setQuote({ ...quote, damage: e.target.value })} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text resize-none" placeholder="Np. pęknięty ekran, telefon nie włącza się po zalaniu…" />
               </div>
               <button type="submit" className="w-full px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform">WYŚLIJ WYCENĘ →</button>
-              {quoteSent && <p className="text-sm text-brand-accent">Otwieramy Twoją aplikację pocztową… Jeśli nic się nie pojawiło, napisz na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>}
+              {quoteSent && (
+                <div className="text-sm text-brand-accent space-y-2">
+                  <p>Otwieramy Twoją aplikację pocztową…</p>
+                  <a
+                    href={buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`)}
+                    className="inline-block px-4 py-2 border border-brand-accent rounded-lg font-bold hover:bg-brand-accent hover:text-brand-bg transition-colors"
+                  >
+                    KLIKNIJ, ABY OTWORZYĆ MAILA →
+                  </a>
+                  <p className="text-brand-text/50">Lub napisz bezpośrednio na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -328,9 +355,27 @@ function Index() {
                   <div className="col-span-2"><Field label="Miasto" value={order.city} onChange={(v) => setOrder({ ...order, city: v })} required /></div>
                 </div>
 
+                <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Dostawa</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "Kurier", label: "Kurier (przedpłata)", price: 18 },
+                    { id: "Pobranie", label: "Kurier za pobraniem", price: 27 },
+                  ].map((d) => (
+                    <button
+                      type="button"
+                      key={d.id}
+                      onClick={() => setOrder({ ...order, delivery: d.id, payment: d.id === "Pobranie" ? "Pobranie" : (order.payment === "Pobranie" ? "BLIK" : order.payment) })}
+                      className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors text-left ${order.delivery === d.id ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}
+                    >
+                      <div>{d.label}</div>
+                      <div className="text-xs opacity-70 mt-1">{d.price} zł</div>
+                    </button>
+                  ))}
+                </div>
+
                 <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Płatność</h3>
                 <div className="grid grid-cols-3 gap-2">
-                  {["BLIK", "Karta", "Pobranie"].map((p) => (
+                  {(order.delivery === "Pobranie" ? ["Pobranie"] : ["BLIK", "Karta", "Przelew"]).map((p) => (
                     <button type="button" key={p} onClick={() => setOrder({ ...order, payment: p })} className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors ${order.payment === p ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}>{p}</button>
                   ))}
                 </div>
@@ -340,14 +385,18 @@ function Index() {
                 {order.payment === "Karta" && (
                   <p className="text-xs text-brand-text/50">Po wysłaniu zamówienia otrzymasz link do bezpiecznej płatności kartą (Stripe / Przelewy24).</p>
                 )}
+                {order.payment === "Przelew" && (
+                  <p className="text-xs text-brand-text/50">Dane do przelewu wyślemy mailem od razu po złożeniu zamówienia.</p>
+                )}
                 {order.payment === "Pobranie" && (
-                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze. Doliczamy 15 zł za usługę.</p>
+                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze paczki.</p>
                 )}
 
                 <div className="flex items-center justify-between pt-4 border-t border-brand-text/10">
                   <div>
                     <p className="text-xs uppercase tracking-widest text-brand-text/40">Razem</p>
-                    <p className="font-display text-2xl font-bold">{cart.price + (order.payment === "Pobranie" ? 15 : 0)} zł</p>
+                    <p className="font-display text-2xl font-bold">{cart.price + (order.delivery === "Pobranie" ? 27 : 18)} zł</p>
+                    <p className="text-[10px] text-brand-text/40">w tym dostawa {order.delivery === "Pobranie" ? 27 : 18} zł</p>
                   </div>
                   <button type="submit" className="px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-105 transition-transform">ZAMÓW I ZAPŁAĆ →</button>
                 </div>
