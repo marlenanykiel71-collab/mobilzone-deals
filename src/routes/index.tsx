@@ -60,22 +60,38 @@ function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "" });
   const [quoteSent, setQuoteSent] = useState(false);
   const [cart, setCart] = useState<Product | null>(null);
-  const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "" });
+  const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
   const [orderSent, setOrderSent] = useState(false);
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
     const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`;
-    window.location.href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
+    const href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
     setQuoteSent(true);
+    const a = document.createElement("a");
+    a.href = href;
+    a.rel = "noopener";
+    a.target = "_self";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const submitOrder = (e: FormEvent) => {
     e.preventDefault();
     if (!cart) return;
-    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena: ${cart.price} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
-    window.location.href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
+    const ship = order.delivery === "Pobranie" ? 27 : 18;
+    const total = cart.price + ship;
+    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena produktu: ${cart.price} zł\nDostawa: ${order.delivery} (${ship} zł)\nRAZEM: ${total} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
+    const href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
     setOrderSent(true);
+    const a = document.createElement("a");
+    a.href = href;
+    a.rel = "noopener";
+    a.target = "_self";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (
@@ -160,7 +176,18 @@ function Index() {
                 <textarea required rows={4} value={quote.damage} onChange={(e) => setQuote({ ...quote, damage: e.target.value })} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text resize-none" placeholder="Np. pęknięty ekran, telefon nie włącza się po zalaniu…" />
               </div>
               <button type="submit" className="w-full px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform">WYŚLIJ WYCENĘ →</button>
-              {quoteSent && <p className="text-sm text-brand-accent">Otwieramy Twoją aplikację pocztową… Jeśli nic się nie pojawiło, napisz na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>}
+              {quoteSent && (
+                <div className="text-sm text-brand-accent space-y-2">
+                  <p>Otwieramy Twoją aplikację pocztową…</p>
+                  <a
+                    href={buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`)}
+                    className="inline-block px-4 py-2 border border-brand-accent rounded-lg font-bold hover:bg-brand-accent hover:text-brand-bg transition-colors"
+                  >
+                    KLIKNIJ, ABY OTWORZYĆ MAILA →
+                  </a>
+                  <p className="text-brand-text/50">Lub napisz bezpośrednio na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>
+                </div>
+              )}
             </form>
           </div>
         </div>
