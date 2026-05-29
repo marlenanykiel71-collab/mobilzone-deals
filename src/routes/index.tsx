@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
 import heroPhone from "@/assets/hero-phone.jpg";
+import productIphone from "@/assets/product-iphone.jpg";
+import productSamsung from "@/assets/product-samsung.jpg";
+import productXiaomi from "@/assets/product-xiaomi.jpg";
+import productEarbuds from "@/assets/product-earbuds.jpg";
+import productCharger from "@/assets/product-charger.jpg";
+import productAccessories from "@/assets/product-accessories.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,7 +33,51 @@ const testimonials = [
   { quote: "Bardzo duży wybór telefonów. Fachowe doradztwo, miła obsługa. Polecam!!!", author: "Sławomir Ginalski", time: "2 lata temu" },
 ];
 
+const SHOP_EMAIL = "prygakacper449@gmail.com";
+
+type Product = {
+  id: string;
+  name: string;
+  category: "Smartfony" | "Akcesoria";
+  price: number;
+  image: string;
+  desc: string;
+};
+
+const products: Product[] = [
+  { id: "iphone-15-pro", name: "iPhone 15 Pro 256GB", category: "Smartfony", price: 4799, image: productIphone, desc: "Tytan, ekran 6,1\", aparat 48 Mpx" },
+  { id: "galaxy-s24", name: "Samsung Galaxy S24 Ultra", category: "Smartfony", price: 4499, image: productSamsung, desc: "S Pen, 512GB, AMOLED 120Hz" },
+  { id: "xiaomi-14", name: "Xiaomi 14 Pro", category: "Smartfony", price: 2899, image: productXiaomi, desc: "Leica, 12/256GB, 5G" },
+  { id: "earbuds-pro", name: "Słuchawki TWS Pro", category: "Akcesoria", price: 199, image: productEarbuds, desc: "Bluetooth 5.3, ANC, 24h pracy" },
+  { id: "wireless-charger", name: "Ładowarka indukcyjna 15W", category: "Akcesoria", price: 89, image: productCharger, desc: "Qi, szybkie ładowanie" },
+  { id: "accessory-pack", name: "Zestaw startowy", category: "Akcesoria", price: 59, image: productAccessories, desc: "Etui + szkło + kabel USB-C" },
+];
+
+const buildMailtoHref = (subject: string, body: string) =>
+  `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
 function Index() {
+  const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "" });
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [cart, setCart] = useState<Product | null>(null);
+  const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "" });
+  const [orderSent, setOrderSent] = useState(false);
+
+  const submitQuote = (e: FormEvent) => {
+    e.preventDefault();
+    const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`;
+    window.location.href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
+    setQuoteSent(true);
+  };
+
+  const submitOrder = (e: FormEvent) => {
+    e.preventDefault();
+    if (!cart) return;
+    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena: ${cart.price} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
+    window.location.href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
+    setOrderSent(true);
+  };
+
   return (
     <div className="min-h-screen bg-brand-bg text-brand-text font-sans selection:bg-brand-accent/30">
       {/* Navigation */}
@@ -38,7 +89,8 @@ function Index() {
           </div>
           <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide uppercase text-brand-text/60">
             <a href="#kolekcja" className="hover:text-brand-accent transition-colors">Kolekcja</a>
-            <a href="#serwis" className="hover:text-brand-accent transition-colors">Serwis</a>
+            <a href="#serwis" className="hover:text-brand-accent transition-colors">Wycena</a>
+            <a href="#sklep" className="hover:text-brand-accent transition-colors">Sklep</a>
             <a href="#opinie" className="hover:text-brand-accent transition-colors">Opinie</a>
             <a href="#kontakt" className="hover:text-brand-accent transition-colors">Kontakt</a>
           </div>
@@ -64,8 +116,8 @@ function Index() {
                 Nowoczesne smartfony, profesjonalny serwis i akcesoria, które odmienią Twój telefon. Sprawdź nasze ceny na iPhone 13 i więcej.
               </p>
               <div className="flex flex-wrap gap-4">
-                <a href="#kolekcja" className="px-8 py-4 bg-brand-text text-brand-bg font-bold rounded-lg hover:bg-brand-accent transition-colors">ZOBACZ OFERTĘ</a>
-                <a href="#serwis" className="px-8 py-4 border border-brand-text/20 font-bold rounded-lg hover:border-brand-accent transition-colors">NASZ SERWIS</a>
+                <a href="#sklep" className="px-8 py-4 bg-brand-text text-brand-bg font-bold rounded-lg hover:bg-brand-accent transition-colors">ZOBACZ OFERTĘ</a>
+                <a href="#serwis" className="px-8 py-4 border border-brand-text/20 font-bold rounded-lg hover:border-brand-accent transition-colors">WYCEŃ NAPRAWĘ</a>
               </div>
             </div>
             <div className="relative">
@@ -81,28 +133,63 @@ function Index() {
         </div>
       </header>
 
-      {/* Bento services */}
+      {/* Service quote form */}
       <section id="serwis" className="py-24 bg-brand-surface/50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 p-8 bg-brand-surface border border-brand-text/5 rounded-3xl hover:border-brand-accent/30 transition-colors">
-              <div className="size-12 rounded-lg bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center mb-6">
-                <div className="size-4 bg-brand-accent rounded-full" />
-              </div>
-              <h2 className="text-2xl font-display font-bold mb-4">Szybki Serwis</h2>
-              <p className="text-brand-text/50 leading-relaxed max-w-prose">
-                Twoje urządzenie wróci do życia szybciej niż myślisz. Wymiana ekranów, baterii, naprawa płyt głównych — realizujemy naprawy rzetelnie i z profesjonalnym podejściem do każdego klienta.
-              </p>
+          <div className="grid lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-2">
+              <div className="inline-block px-3 py-1 border border-brand-accent/30 text-brand-accent text-xs font-bold tracking-widest uppercase mb-6">Bezpłatna wycena 24h</div>
+              <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">WYCEŃ <span className="text-brand-accent">NAPRAWĘ</span> ONLINE</h2>
+              <p className="text-brand-text/60 leading-relaxed mb-8">Wypełnij formularz — odpowiemy z dokładną wyceną w ciągu 24h. Wymiana ekranów, baterii, naprawa płyt głównych i zalanych urządzeń.</p>
+              <ul className="space-y-3 text-sm text-brand-text/70">
+                <li className="flex gap-3"><span className="text-brand-accent">✓</span> Diagnoza gratis</li>
+                <li className="flex gap-3"><span className="text-brand-accent">✓</span> Oryginalne części</li>
+                <li className="flex gap-3"><span className="text-brand-accent">✓</span> 6 miesięcy gwarancji</li>
+                <li className="flex gap-3"><span className="text-brand-accent">✓</span> Naprawa nawet w 1h</li>
+              </ul>
             </div>
-            <div id="kontakt" className="p-8 bg-brand-accent text-brand-bg rounded-3xl">
-              <h2 className="text-2xl font-display font-bold mb-4">Jasło, Czackiego 21</h2>
-              <p className="font-medium mb-8">Znajdziesz nas w samym sercu miasta. Zapraszamy po fachowe doradztwo.</p>
-              <div className="space-y-2 text-sm font-bold">
-                <div className="flex justify-between border-b border-brand-bg/10 pb-2"><span>PON–PT</span><span>09:30–16:30</span></div>
-                <div className="flex justify-between border-b border-brand-bg/10 pb-2"><span>SOBOTA</span><span>09:00–13:00</span></div>
-                <div className="flex justify-between"><span>NIEDZIELA</span><span>ZAMKNIĘTE</span></div>
+            <form onSubmit={submitQuote} className="lg:col-span-3 p-8 bg-brand-surface border border-brand-text/10 rounded-3xl space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <Field label="Imię i nazwisko" value={quote.name} onChange={(v) => setQuote({ ...quote, name: v })} required />
+                <Field label="Telefon kontaktowy" type="tel" value={quote.phone} onChange={(v) => setQuote({ ...quote, phone: v })} required />
               </div>
-            </div>
+              <Field label="E-mail" type="email" value={quote.email} onChange={(v) => setQuote({ ...quote, email: v })} required />
+              <Field label="Model urządzenia (np. iPhone 13 Pro)" value={quote.model} onChange={(v) => setQuote({ ...quote, model: v })} required />
+              <div>
+                <label className="block text-xs font-bold tracking-widest uppercase text-brand-text/50 mb-2">Opis uszkodzenia</label>
+                <textarea required rows={4} value={quote.damage} onChange={(e) => setQuote({ ...quote, damage: e.target.value })} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text resize-none" placeholder="Np. pęknięty ekran, telefon nie włącza się po zalaniu…" />
+              </div>
+              <button type="submit" className="w-full px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform">WYŚLIJ WYCENĘ →</button>
+              {quoteSent && <p className="text-sm text-brand-accent">Otwieramy Twoją aplikację pocztową… Jeśli nic się nie pojawiło, napisz na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>}
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Shop / Products */}
+      <section id="sklep" className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <h2 className="font-display text-5xl font-bold">SKLEP <br/><span className="text-brand-accent">ONLINE</span></h2>
+            <p className="text-brand-text/40 max-w-sm mb-2">Zamów online z dostawą kurierem — płatność BLIK, kartą lub przy odbiorze.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((p) => (
+              <article key={p.id} className="group bg-brand-surface border border-brand-text/10 rounded-2xl overflow-hidden hover:border-brand-accent/40 transition-colors">
+                <div className="aspect-square bg-brand-bg overflow-hidden">
+                  <img src={p.image} alt={p.name} width={768} height={768} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="p-6">
+                  <p className="text-[10px] font-bold tracking-widest uppercase text-brand-accent mb-2">{p.category}</p>
+                  <h3 className="font-display text-xl font-bold mb-1">{p.name}</h3>
+                  <p className="text-sm text-brand-text/50 mb-4">{p.desc}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-2xl font-bold">{p.price} zł</span>
+                    <button onClick={() => { setCart(p); setOrderSent(false); }} className="px-4 py-2 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg hover:scale-105 transition-transform">KUP TERAZ</button>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -147,7 +234,7 @@ function Index() {
       </section>
 
       {/* Contact Footer */}
-      <footer className="bg-black py-20 border-t border-brand-text/5">
+      <footer id="kontakt" className="bg-black py-20 border-t border-brand-text/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-20">
             <div>
@@ -198,6 +285,79 @@ function Index() {
           </div>
         </div>
       </footer>
+
+      {/* Checkout modal */}
+      {cart && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setCart(null)}>
+          <div className="bg-brand-surface border border-brand-text/10 rounded-3xl max-w-2xl w-full my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-brand-text/10">
+              <div className="flex items-center gap-4">
+                <img src={cart.image} alt="" width={64} height={64} className="size-16 object-cover rounded-lg" />
+                <div>
+                  <p className="font-display font-bold">{cart.name}</p>
+                  <p className="text-brand-accent font-bold">{cart.price} zł</p>
+                </div>
+              </div>
+              <button onClick={() => setCart(null)} className="size-10 rounded-full border border-brand-text/10 hover:border-brand-accent text-brand-text/60 hover:text-brand-accent">✕</button>
+            </div>
+            {orderSent ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="text-5xl">✓</div>
+                <h3 className="font-display text-2xl font-bold">Zamówienie wysłane</h3>
+                <p className="text-brand-text/60">Otworzyliśmy Twoją aplikację pocztową. Po opłaceniu BLIK / przelewem skontaktujemy się i wyślemy paczkę w 24h.</p>
+                <button onClick={() => setCart(null)} className="px-6 py-3 bg-brand-accent text-brand-bg font-bold rounded-lg">ZAMKNIJ</button>
+              </div>
+            ) : (
+              <form onSubmit={submitOrder} className="p-6 space-y-4">
+                <h3 className="font-display text-xl font-bold uppercase tracking-tight">Dane do wysyłki</h3>
+                <Field label="Imię i nazwisko" value={order.fullName} onChange={(v) => setOrder({ ...order, fullName: v })} required />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Field label="E-mail" type="email" value={order.email} onChange={(v) => setOrder({ ...order, email: v })} required />
+                  <Field label="Telefon" type="tel" value={order.phone} onChange={(v) => setOrder({ ...order, phone: v })} required />
+                </div>
+                <Field label="Ulica i numer" value={order.address} onChange={(v) => setOrder({ ...order, address: v })} required />
+                <div className="grid grid-cols-3 gap-4">
+                  <Field label="Kod pocztowy" value={order.postal} onChange={(v) => setOrder({ ...order, postal: v })} required />
+                  <div className="col-span-2"><Field label="Miasto" value={order.city} onChange={(v) => setOrder({ ...order, city: v })} required /></div>
+                </div>
+
+                <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Płatność</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {["BLIK", "Karta", "Pobranie"].map((p) => (
+                    <button type="button" key={p} onClick={() => setOrder({ ...order, payment: p })} className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors ${order.payment === p ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}>{p}</button>
+                  ))}
+                </div>
+                {order.payment === "BLIK" && (
+                  <Field label="6-cyfrowy kod BLIK" value={order.blik} onChange={(v) => setOrder({ ...order, blik: v.replace(/\D/g, "").slice(0, 6) })} required placeholder="123 456" />
+                )}
+                {order.payment === "Karta" && (
+                  <p className="text-xs text-brand-text/50">Po wysłaniu zamówienia otrzymasz link do bezpiecznej płatności kartą (Stripe / Przelewy24).</p>
+                )}
+                {order.payment === "Pobranie" && (
+                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze. Doliczamy 15 zł za usługę.</p>
+                )}
+
+                <div className="flex items-center justify-between pt-4 border-t border-brand-text/10">
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-brand-text/40">Razem</p>
+                    <p className="font-display text-2xl font-bold">{cart.price + (order.payment === "Pobranie" ? 15 : 0)} zł</p>
+                  </div>
+                  <button type="submit" className="px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-105 transition-transform">ZAMÓW I ZAPŁAĆ →</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type = "text", required, placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string }) {
+  return (
+    <div>
+      <label className="block text-xs font-bold tracking-widest uppercase text-brand-text/50 mb-2">{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} placeholder={placeholder} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text" />
     </div>
   );
 }
