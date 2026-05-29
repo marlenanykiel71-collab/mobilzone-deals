@@ -56,25 +56,52 @@ const products: Product[] = [
 const buildMailtoHref = (subject: string, body: string) =>
   `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
+const buildGmailHref = (subject: string, body: string) =>
+  `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SHOP_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+const buildOutlookHref = (subject: string, body: string) =>
+  `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(SHOP_EMAIL)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+type SendPayload = { subject: string; body: string };
+
+function SendPanel({ payload }: { payload: SendPayload }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(`Do: ${SHOP_EMAIL}\nTemat: ${payload.subject}\n\n${payload.body}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <div className="space-y-3 p-5 rounded-2xl border border-brand-accent/40 bg-brand-accent/5">
+      <p className="text-sm font-bold text-brand-accent uppercase tracking-widest">Wyślij na: {SHOP_EMAIL}</p>
+      <p className="text-xs text-brand-text/60">Wybierz, jak chcesz wysłać wiadomość — kliknięcie otworzy gotowy mail w nowej karcie:</p>
+      <div className="grid grid-cols-2 gap-2">
+        <a href={buildGmailHref(payload.subject, payload.body)} target="_blank" rel="noopener noreferrer" className="px-4 py-3 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg text-center hover:scale-[1.02] transition-transform">📧 GMAIL</a>
+        <a href={buildOutlookHref(payload.subject, payload.body)} target="_blank" rel="noopener noreferrer" className="px-4 py-3 bg-brand-text text-brand-bg font-bold text-sm rounded-lg text-center hover:scale-[1.02] transition-transform">📨 OUTLOOK</a>
+        <a href={buildMailtoHref(payload.subject, payload.body)} className="px-4 py-3 border border-brand-text/20 font-bold text-sm rounded-lg text-center hover:border-brand-accent transition-colors">✉ APLIKACJA POCZTY</a>
+        <button type="button" onClick={copy} className="px-4 py-3 border border-brand-text/20 font-bold text-sm rounded-lg hover:border-brand-accent transition-colors">{copied ? "✓ SKOPIOWANO" : "📋 KOPIUJ TREŚĆ"}</button>
+      </div>
+      <p className="text-[11px] text-brand-text/40">Możesz też napisać do nas na WhatsApp / SMS pod <a href="tel:508171201" className="underline">508 171 201</a>.</p>
+    </div>
+  );
+}
+
 function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "" });
-  const [quoteSent, setQuoteSent] = useState(false);
+  const [quoteSent, setQuoteSent] = useState<SendPayload | null>(null);
   const [cart, setCart] = useState<Product | null>(null);
   const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
-  const [orderSent, setOrderSent] = useState(false);
+  const [orderSent, setOrderSent] = useState<SendPayload | null>(null);
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
+    const subject = `Wycena naprawy — ${quote.model || quote.name}`;
     const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`;
-    const href = buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, body);
-    setQuoteSent(true);
-    const a = document.createElement("a");
-    a.href = href;
-    a.rel = "noopener";
-    a.target = "_self";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    setQuoteSent({ subject, body });
   };
 
   const submitOrder = (e: FormEvent) => {
@@ -82,16 +109,9 @@ function Index() {
     if (!cart) return;
     const ship = order.delivery === "Pobranie" ? 27 : 18;
     const total = cart.price + ship;
+    const subject = `Zamówienie ${cart.name}`;
     const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena produktu: ${cart.price} zł\nDostawa: ${order.delivery} (${ship} zł)\nRAZEM: ${total} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
-    const href = buildMailtoHref(`Zamówienie ${cart.name}`, body);
-    setOrderSent(true);
-    const a = document.createElement("a");
-    a.href = href;
-    a.rel = "noopener";
-    a.target = "_self";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    setOrderSent({ subject, body });
   };
 
   return (
