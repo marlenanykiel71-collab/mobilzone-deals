@@ -269,15 +269,22 @@ function Index() {
                 </div>
               </div>
             </div>
-            <div className="bg-brand-surface p-1 rounded-2xl border border-brand-text/10 overflow-hidden min-h-[300px]">
+            <a
+              href="https://www.google.com/maps/place/Telefony+MOBILZONE/@49.7441754,21.4683716,17z/data=!3m1!4b1!4m6!3m5!1s0x473db474a96c6415:0xeadaa54a7a09ecd5!8m2!3d49.7441754!4d21.4709465!16s%2Fg%2F11c7vyhygk"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Otwórz Telefony MOBILZONE w Google Maps"
+              className="bg-brand-surface p-1 rounded-2xl border border-brand-text/10 overflow-hidden min-h-[300px] block group relative"
+            >
               <iframe
                 title="Mapa MOBILZONE Jasło"
                 src="https://www.google.com/maps?q=Tadeusza+Czackiego+21,+Jaslo&output=embed"
-                className="w-full h-full min-h-[300px] rounded-2xl grayscale contrast-125 invert"
+                className="w-full h-full min-h-[300px] rounded-2xl grayscale contrast-125 invert pointer-events-none"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-            </div>
+              <span className="absolute bottom-3 right-3 bg-brand-accent text-brand-bg text-xs font-bold tracking-widest px-3 py-2 rounded-full opacity-90 group-hover:opacity-100">OTWÓRZ W MAPACH →</span>
+            </a>
           </div>
           <div className="mt-20 pt-8 border-t border-brand-text/5 flex flex-col md:flex-row justify-between gap-4 text-xs font-bold tracking-widest text-brand-text/30">
             <p>© 2024 MOBILZONE JASŁO</p>
