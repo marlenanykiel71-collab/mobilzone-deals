@@ -344,11 +344,14 @@ function Index() {
               <button onClick={() => setCart(null)} className="size-10 rounded-full border border-brand-text/10 hover:border-brand-accent text-brand-text/60 hover:text-brand-accent">✕</button>
             </div>
             {orderSent ? (
-              <div className="p-8 text-center space-y-4">
-                <div className="text-5xl">✓</div>
-                <h3 className="font-display text-2xl font-bold">Zamówienie wysłane</h3>
-                <p className="text-brand-text/60">Otworzyliśmy Twoją aplikację pocztową. Po opłaceniu BLIK / przelewem skontaktujemy się i wyślemy paczkę w 24h.</p>
-                <button onClick={() => setCart(null)} className="px-6 py-3 bg-brand-accent text-brand-bg font-bold rounded-lg">ZAMKNIJ</button>
+              <div className="p-6 space-y-4">
+                <div className="text-center space-y-2">
+                  <div className="text-5xl">✓</div>
+                  <h3 className="font-display text-2xl font-bold">Prawie gotowe!</h3>
+                  <p className="text-brand-text/60 text-sm">Wybierz, jak wysłać nam zamówienie. Skontaktujemy się i wyślemy paczkę w 24h.</p>
+                </div>
+                <SendPanel payload={orderSent} />
+                <button onClick={() => setCart(null)} className="w-full px-6 py-3 border border-brand-text/10 hover:border-brand-accent font-bold rounded-lg transition-colors">ZAMKNIJ</button>
               </div>
             ) : (
               <form onSubmit={submitOrder} className="p-6 space-y-4">
