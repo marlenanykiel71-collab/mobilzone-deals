@@ -196,18 +196,7 @@ function Index() {
                 <textarea required rows={4} value={quote.damage} onChange={(e) => setQuote({ ...quote, damage: e.target.value })} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text resize-none" placeholder="Np. pęknięty ekran, telefon nie włącza się po zalaniu…" />
               </div>
               <button type="submit" className="w-full px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform">WYŚLIJ WYCENĘ →</button>
-              {quoteSent && (
-                <div className="text-sm text-brand-accent space-y-2">
-                  <p>Otwieramy Twoją aplikację pocztową…</p>
-                  <a
-                    href={buildMailtoHref(`Wycena naprawy — ${quote.model || quote.name}`, `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`)}
-                    className="inline-block px-4 py-2 border border-brand-accent rounded-lg font-bold hover:bg-brand-accent hover:text-brand-bg transition-colors"
-                  >
-                    KLIKNIJ, ABY OTWORZYĆ MAILA →
-                  </a>
-                  <p className="text-brand-text/50">Lub napisz bezpośrednio na <a href={`mailto:${SHOP_EMAIL}`} className="underline">{SHOP_EMAIL}</a>.</p>
-                </div>
-              )}
+              {quoteSent && <SendPanel payload={quoteSent} />}
             </form>
           </div>
         </div>
