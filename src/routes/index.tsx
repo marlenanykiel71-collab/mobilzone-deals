@@ -355,9 +355,27 @@ function Index() {
                   <div className="col-span-2"><Field label="Miasto" value={order.city} onChange={(v) => setOrder({ ...order, city: v })} required /></div>
                 </div>
 
+                <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Dostawa</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "Kurier", label: "Kurier (przedpłata)", price: 18 },
+                    { id: "Pobranie", label: "Kurier za pobraniem", price: 27 },
+                  ].map((d) => (
+                    <button
+                      type="button"
+                      key={d.id}
+                      onClick={() => setOrder({ ...order, delivery: d.id, payment: d.id === "Pobranie" ? "Pobranie" : (order.payment === "Pobranie" ? "BLIK" : order.payment) })}
+                      className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors text-left ${order.delivery === d.id ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}
+                    >
+                      <div>{d.label}</div>
+                      <div className="text-xs opacity-70 mt-1">{d.price} zł</div>
+                    </button>
+                  ))}
+                </div>
+
                 <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Płatność</h3>
                 <div className="grid grid-cols-3 gap-2">
-                  {["BLIK", "Karta", "Pobranie"].map((p) => (
+                  {(order.delivery === "Pobranie" ? ["Pobranie"] : ["BLIK", "Karta", "Przelew"]).map((p) => (
                     <button type="button" key={p} onClick={() => setOrder({ ...order, payment: p })} className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors ${order.payment === p ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}>{p}</button>
                   ))}
                 </div>
@@ -367,14 +385,18 @@ function Index() {
                 {order.payment === "Karta" && (
                   <p className="text-xs text-brand-text/50">Po wysłaniu zamówienia otrzymasz link do bezpiecznej płatności kartą (Stripe / Przelewy24).</p>
                 )}
+                {order.payment === "Przelew" && (
+                  <p className="text-xs text-brand-text/50">Dane do przelewu wyślemy mailem od razu po złożeniu zamówienia.</p>
+                )}
                 {order.payment === "Pobranie" && (
-                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze. Doliczamy 15 zł za usługę.</p>
+                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze paczki.</p>
                 )}
 
                 <div className="flex items-center justify-between pt-4 border-t border-brand-text/10">
                   <div>
                     <p className="text-xs uppercase tracking-widest text-brand-text/40">Razem</p>
-                    <p className="font-display text-2xl font-bold">{cart.price + (order.payment === "Pobranie" ? 15 : 0)} zł</p>
+                    <p className="font-display text-2xl font-bold">{cart.price + (order.delivery === "Pobranie" ? 27 : 18)} zł</p>
+                    <p className="text-[10px] text-brand-text/40">w tym dostawa {order.delivery === "Pobranie" ? 27 : 18} zł</p>
                   </div>
                   <button type="submit" className="px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-105 transition-transform">ZAMÓW I ZAPŁAĆ →</button>
                 </div>
