@@ -347,7 +347,7 @@ function Index() {
                     <h3 className="font-display text-base font-bold mb-3 leading-tight">{a.name}</h3>
                     <div className="flex items-center justify-between">
                       <span className="font-display text-xl font-bold">{a.price} zł</span>
-                      <a href="tel:508171201" className="text-xs font-bold text-brand-accent hover:underline">ZAMÓW →</a>
+                      <button type="button" onClick={() => addToCart({ id: `acc-${selectedModel}-${i}`, name: `${a.name} (${phoneModels.find((m) => m.id === selectedModel)?.label ?? ""})`, category: "Akcesoria", price: a.price, image: a.image, desc: a.type })} className="text-xs font-bold text-brand-accent hover:underline">DO KOSZYKA →</button>
                     </div>
                   </div>
                 </article>
