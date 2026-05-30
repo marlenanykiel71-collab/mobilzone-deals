@@ -226,9 +226,16 @@ function Index() {
             <a href="#opinie" className="hover:text-brand-accent transition-colors">Opinie</a>
             <a href="#kontakt" className="hover:text-brand-accent transition-colors">Kontakt</a>
           </div>
-          <a href="tel:508171201" className="px-5 py-2.5 bg-brand-accent text-brand-bg font-bold text-sm rounded-full hover:scale-105 transition-transform">
-            ZADZWOŃ TERAZ
-          </a>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setCartOpen(true)} className="relative px-4 py-2.5 border border-brand-text/20 hover:border-brand-accent font-bold text-sm rounded-full transition-colors flex items-center gap-2">
+              <span aria-hidden>🛒</span>
+              <span className="hidden sm:inline">KOSZYK</span>
+              {cartCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1 text-[11px] font-bold rounded-full bg-brand-accent text-brand-bg">{cartCount}</span>
+              )}
+            </button>
+            <a href="tel:508171201" className="hidden sm:inline-block px-5 py-2.5 bg-brand-accent text-brand-bg font-bold text-sm rounded-full hover:scale-105 transition-transform">ZADZWOŃ</a>
+          </div>
         </div>
       </nav>
 
