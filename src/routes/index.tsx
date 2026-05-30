@@ -164,11 +164,32 @@ function SendPanel({ payload }: { payload: SendPayload }) {
 function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "", service: "Przyniosę osobiście", address: "" });
   const [quoteSent, setQuoteSent] = useState<SendPayload | null>(null);
-  const [cart, setCart] = useState<Product | null>(null);
+  const [cart, setCart] = useState<{ product: Product; qty: number }[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
   const [orderSent, setOrderSent] = useState<SendPayload | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.qty * i.product.price, 0);
+  const shipping = order.delivery === "Pobranie" ? 27 : 18;
+  const grandTotal = cartTotal + shipping;
+
+  const addToCart = (p: Product) => {
+    setCart((c) => {
+      const ex = c.find((i) => i.product.id === p.id);
+      if (ex) return c.map((i) => i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i);
+      return [...c, { product: p, qty: 1 }];
+    });
+    setCartOpen(true);
+    setOrderSent(null);
+  };
+  const updateQty = (id: string, delta: number) => {
+    setCart((c) => c.map((i) => i.product.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i));
+  };
+  const removeItem = (id: string) => setCart((c) => c.filter((i) => i.product.id !== id));
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
@@ -179,11 +200,11 @@ function Index() {
 
   const submitOrder = (e: FormEvent) => {
     e.preventDefault();
-    if (!cart) return;
-    const ship = order.delivery === "Pobranie" ? 27 : 18;
-    const total = cart.price + ship;
-    const subject = `Zamówienie ${cart.name}`;
-    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena produktu: ${cart.price} zł\nDostawa: ${order.delivery} (${ship} zł)\nRAZEM: ${total} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
+    if (cart.length === 0) return;
+    const orderNo = `MZ-${Date.now().toString().slice(-6)}`;
+    const itemsLines = cart.map((i) => `• ${i.product.name} × ${i.qty} = ${i.qty * i.product.price} zł`).join("\n");
+    const subject = `Zamówienie ${orderNo} — ${cartCount} szt., ${grandTotal} zł`;
+    const body = `Zamówienie — MOBILZONE\nNumer: ${orderNo}\n\nPRODUKTY:\n${itemsLines}\n\nSuma produktów: ${cartTotal} zł\nDostawa: ${order.delivery} (${shipping} zł)\nRAZEM DO ZAPŁATY: ${grandTotal} zł\n\nDANE DO WYSYŁKI:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPŁATNOŚĆ: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
     setOrderSent({ subject, body });
   };
 
