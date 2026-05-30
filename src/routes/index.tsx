@@ -200,6 +200,8 @@ function Index() {
             <a href="#kolekcja" className="hover:text-brand-accent transition-colors">Kolekcja</a>
             <a href="#serwis" className="hover:text-brand-accent transition-colors">Wycena</a>
             <a href="#sklep" className="hover:text-brand-accent transition-colors">Sklep</a>
+            <a href="#akcesoria" className="hover:text-brand-accent transition-colors">Akcesoria</a>
+            <a href="#faq" className="hover:text-brand-accent transition-colors">FAQ</a>
             <a href="#opinie" className="hover:text-brand-accent transition-colors">Opinie</a>
             <a href="#kontakt" className="hover:text-brand-accent transition-colors">Kontakt</a>
           </div>
@@ -268,9 +270,90 @@ function Index() {
                 <label className="block text-xs font-bold tracking-widest uppercase text-brand-text/50 mb-2">Opis uszkodzenia</label>
                 <textarea required rows={4} value={quote.damage} onChange={(e) => setQuote({ ...quote, damage: e.target.value })} className="w-full px-4 py-3 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text resize-none" placeholder="Np. pęknięty ekran, telefon nie włącza się po zalaniu…" />
               </div>
+              <div>
+                <label className="block text-xs font-bold tracking-widest uppercase text-brand-text/50 mb-2">Jak dostarczysz telefon?</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Przyniosę osobiście", "Wyślę kurierem", "Dojazd technika"].map((s) => (
+                    <button type="button" key={s} onClick={() => setQuote({ ...quote, service: s })} className={`px-3 py-3 rounded-lg border text-xs font-bold transition-colors text-center ${quote.service === s ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}>{s}</button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-brand-text/40 mt-2">
+                  {quote.service === "Przyniosę osobiście" && "Zapraszamy do sklepu: ul. Tadeusza Czackiego 21, Jasło."}
+                  {quote.service === "Wyślę kurierem" && "Po wycenie wyślemy instrukcję pakowania. Odsyłka w 24h od naprawy."}
+                  {quote.service === "Dojazd technika" && "Dojazd na terenie Jasła — 30 zł. Drobne naprawy wykonujemy na miejscu."}
+                </p>
+              </div>
+              {quote.service !== "Przyniosę osobiście" && (
+                <Field label={quote.service === "Dojazd technika" ? "Adres dojazdu" : "Adres nadawcy"} value={quote.address} onChange={(v) => setQuote({ ...quote, address: v })} required placeholder="Ulica, nr, kod, miasto" />
+              )}
               <button type="submit" className="w-full px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform">WYŚLIJ WYCENĘ →</button>
               {quoteSent && <SendPanel payload={quoteSent} />}
             </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Accessories by model */}
+      <section id="akcesoria" className="py-24 bg-brand-surface/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
+            <h2 className="font-display text-5xl font-bold">AKCESORIA <br/><span className="text-brand-accent">DO TWOJEGO TELEFONU</span></h2>
+            <p className="text-brand-text/40 max-w-sm mb-2">Wybierz model — pokażemy pasujące etui, szkła, ładowarki i kable.</p>
+          </div>
+          <div className="mb-8">
+            <label className="block text-xs font-bold tracking-widest uppercase text-brand-text/50 mb-3">Wybierz swój telefon</label>
+            <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="w-full md:w-96 px-4 py-4 bg-brand-bg border border-brand-text/10 rounded-lg focus:border-brand-accent outline-none text-brand-text font-bold">
+              <option value="">— wybierz model —</option>
+              {phoneModels.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+            </select>
+          </div>
+          {selectedModel && accessoriesByModel[selectedModel] && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {accessoriesByModel[selectedModel].map((a, i) => (
+                <article key={i} className="bg-brand-surface border border-brand-text/10 rounded-2xl overflow-hidden hover:border-brand-accent/40 transition-colors">
+                  <div className="aspect-square bg-brand-bg overflow-hidden">
+                    <img src={a.image} alt={a.name} loading="lazy" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-[10px] font-bold tracking-widest uppercase text-brand-accent mb-2">{a.type}</p>
+                    <h3 className="font-display text-base font-bold mb-3 leading-tight">{a.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="font-display text-xl font-bold">{a.price} zł</span>
+                      <a href="tel:508171201" className="text-xs font-bold text-brand-accent hover:underline">ZAMÓW →</a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          {!selectedModel && (
+            <div className="text-center py-16 border border-dashed border-brand-text/10 rounded-2xl text-brand-text/40 text-sm">
+              Wybierz model telefonu z listy powyżej, aby zobaczyć pasujące akcesoria.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="inline-block px-3 py-1 border border-brand-accent/30 text-brand-accent text-xs font-bold tracking-widest uppercase mb-6">Najczęściej zadawane pytania</div>
+            <h2 className="font-display text-5xl font-bold">MASZ <span className="text-brand-accent">PYTANIA?</span></h2>
+          </div>
+          <div className="space-y-3">
+            {faqs.map((f, i) => {
+              const open = openFaq === i;
+              return (
+                <div key={i} className="bg-brand-surface border border-brand-text/10 rounded-2xl overflow-hidden">
+                  <button type="button" onClick={() => setOpenFaq(open ? null : i)} className="w-full flex items-center justify-between gap-4 p-6 text-left hover:bg-brand-surface/60 transition-colors">
+                    <span className="font-display font-bold text-lg">{f.q}</span>
+                    <span className={`text-brand-accent text-2xl transition-transform shrink-0 ${open ? "rotate-45" : ""}`}>+</span>
+                  </button>
+                  {open && <div className="px-6 pb-6 text-brand-text/70 leading-relaxed">{f.a}</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
