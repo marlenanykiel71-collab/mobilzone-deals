@@ -33,6 +33,77 @@ const testimonials = [
   { quote: "Bardzo duży wybór telefonów. Fachowe doradztwo, miła obsługa. Polecam!!!", author: "Sławomir Ginalski", time: "2 lata temu" },
 ];
 
+const faqs = [
+  { q: "Ile trwa naprawa telefonu?", a: "Wymiana ekranu lub baterii to zwykle 1–2h. Bardziej skomplikowane naprawy (płyta główna, zalanie) — 1–3 dni robocze. Zawsze informujemy o czasie po diagnozie." },
+  { q: "Czy dajecie gwarancję na naprawę?", a: "Tak — 6 miesięcy gwarancji na wymienione części i wykonaną usługę." },
+  { q: "Czy można wysłać telefon do serwisu kurierem?", a: "Tak. Po wycenie wysyłamy instrukcję pakowania i adres. Naprawiony telefon odsyłamy w 24h od zakończenia naprawy." },
+  { q: "Czy kupujecie używane telefony?", a: "Tak, skupujemy iPhone'y, Samsungi i Xiaomi w dobrym stanie. Wyceń telefon w formularzu lub zadzwoń." },
+  { q: "Jakie formy płatności akceptujecie?", a: "BLIK, karta, przelew tradycyjny oraz płatność przy odbiorze (kurier za pobraniem)." },
+  { q: "Czy mogę zwrócić zakupiony telefon?", a: "Tak — masz 14 dni na zwrot zgodnie z prawem konsumenckim, pod warunkiem że telefon jest w stanie nienaruszonym." },
+];
+
+type PhoneModel = { id: string; label: string };
+const phoneModels: PhoneModel[] = [
+  { id: "iphone-15-pro", label: "iPhone 15 Pro / 15 Pro Max" },
+  { id: "iphone-15", label: "iPhone 15 / 15 Plus" },
+  { id: "iphone-14", label: "iPhone 14 / 14 Pro" },
+  { id: "iphone-13", label: "iPhone 13 / 13 Pro" },
+  { id: "galaxy-s24", label: "Samsung Galaxy S24 / S24 Ultra" },
+  { id: "galaxy-s23", label: "Samsung Galaxy S23" },
+  { id: "galaxy-a54", label: "Samsung Galaxy A54" },
+  { id: "xiaomi-14", label: "Xiaomi 14 / 14 Pro" },
+  { id: "xiaomi-redmi-note-13", label: "Xiaomi Redmi Note 13" },
+];
+
+type Accessory = { name: string; type: "Etui" | "Szkło" | "Ładowarka" | "Kabel"; price: number; image: string };
+const accessoriesByModel: Record<string, Accessory[]> = {
+  "iphone-15-pro": [
+    { name: "Etui silikonowe MagSafe", type: "Etui", price: 79, image: productAccessories },
+    { name: "Szkło hartowane 9H Full Glue", type: "Szkło", price: 39, image: productAccessories },
+    { name: "Ładowarka MagSafe 15W", type: "Ładowarka", price: 119, image: productCharger },
+    { name: "Kabel USB-C → USB-C 1m", type: "Kabel", price: 29, image: productAccessories },
+  ],
+  "iphone-15": [
+    { name: "Etui przezroczyste anti-shock", type: "Etui", price: 59, image: productAccessories },
+    { name: "Szkło hartowane Privacy", type: "Szkło", price: 49, image: productAccessories },
+    { name: "Ładowarka MagSafe 15W", type: "Ładowarka", price: 119, image: productCharger },
+  ],
+  "iphone-14": [
+    { name: "Etui skórzane premium", type: "Etui", price: 89, image: productAccessories },
+    { name: "Szkło hartowane 9H", type: "Szkło", price: 35, image: productAccessories },
+    { name: "Ładowarka indukcyjna 15W", type: "Ładowarka", price: 89, image: productCharger },
+  ],
+  "iphone-13": [
+    { name: "Etui silikonowe MagSafe", type: "Etui", price: 69, image: productAccessories },
+    { name: "Szkło 9H Full Glue", type: "Szkło", price: 29, image: productAccessories },
+    { name: "Kabel Lightning 1m", type: "Kabel", price: 25, image: productAccessories },
+  ],
+  "galaxy-s24": [
+    { name: "Etui pancerne Spigen-style", type: "Etui", price: 75, image: productAccessories },
+    { name: "Szkło UV 3D Full Glue", type: "Szkło", price: 59, image: productAccessories },
+    { name: "Ładowarka indukcyjna 15W", type: "Ładowarka", price: 89, image: productCharger },
+  ],
+  "galaxy-s23": [
+    { name: "Etui książkowe", type: "Etui", price: 69, image: productAccessories },
+    { name: "Szkło hartowane 9H", type: "Szkło", price: 35, image: productAccessories },
+  ],
+  "galaxy-a54": [
+    { name: "Etui silikonowe matowe", type: "Etui", price: 49, image: productAccessories },
+    { name: "Szkło 9H Full Glue", type: "Szkło", price: 29, image: productAccessories },
+    { name: "Kabel USB-C 1m", type: "Kabel", price: 19, image: productAccessories },
+  ],
+  "xiaomi-14": [
+    { name: "Etui Carbon TPU", type: "Etui", price: 59, image: productAccessories },
+    { name: "Szkło 9H Full Glue", type: "Szkło", price: 29, image: productAccessories },
+    { name: "Ładowarka HyperCharge 120W", type: "Ładowarka", price: 149, image: productCharger },
+  ],
+  "xiaomi-redmi-note-13": [
+    { name: "Etui silikonowe matowe", type: "Etui", price: 39, image: productAccessories },
+    { name: "Szkło hartowane 9H", type: "Szkło", price: 25, image: productAccessories },
+    { name: "Kabel USB-C 1m", type: "Kabel", price: 19, image: productAccessories },
+  ],
+};
+
 const SHOP_EMAIL = "prygakacper449@gmail.com";
 
 type Product = {
@@ -91,16 +162,18 @@ function SendPanel({ payload }: { payload: SendPayload }) {
 }
 
 function Index() {
-  const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "" });
+  const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "", service: "Przyniosę osobiście", address: "" });
   const [quoteSent, setQuoteSent] = useState<SendPayload | null>(null);
   const [cart, setCart] = useState<Product | null>(null);
   const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
   const [orderSent, setOrderSent] = useState<SendPayload | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
     const subject = `Wycena naprawy — ${quote.model || quote.name}`;
-    const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n`;
+    const body = `Wycena naprawy — MOBILZONE\n\nKlient: ${quote.name}\nTelefon: ${quote.phone}\nE-mail: ${quote.email}\n\nModel urządzenia: ${quote.model}\n\nOpis uszkodzenia:\n${quote.damage}\n\nForma dostarczenia: ${quote.service}${quote.service !== "Przyniosę osobiście" ? `\nAdres: ${quote.address}` : ""}\n`;
     setQuoteSent({ subject, body });
   };
 
