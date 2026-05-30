@@ -405,7 +405,7 @@ function Index() {
                   <p className="text-sm text-brand-text/50 mb-4">{p.desc}</p>
                   <div className="flex items-center justify-between">
                     <span className="font-display text-2xl font-bold">{p.price} zł</span>
-                    <button onClick={() => { setCart(p); setOrderSent(null); }} className="px-4 py-2 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg hover:scale-105 transition-transform">KUP TERAZ</button>
+                    <button onClick={() => addToCart(p)} className="px-4 py-2 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg hover:scale-105 transition-transform">DO KOSZYKA</button>
                   </div>
                 </div>
               </article>
