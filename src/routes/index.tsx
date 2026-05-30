@@ -164,11 +164,32 @@ function SendPanel({ payload }: { payload: SendPayload }) {
 function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "", service: "Przyniosę osobiście", address: "" });
   const [quoteSent, setQuoteSent] = useState<SendPayload | null>(null);
-  const [cart, setCart] = useState<Product | null>(null);
+  const [cart, setCart] = useState<{ product: Product; qty: number }[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [order, setOrder] = useState({ fullName: "", email: "", phone: "", address: "", postal: "", city: "", payment: "BLIK", blik: "", delivery: "Kurier" });
   const [orderSent, setOrderSent] = useState<SendPayload | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.qty * i.product.price, 0);
+  const shipping = order.delivery === "Pobranie" ? 27 : 18;
+  const grandTotal = cartTotal + shipping;
+
+  const addToCart = (p: Product) => {
+    setCart((c) => {
+      const ex = c.find((i) => i.product.id === p.id);
+      if (ex) return c.map((i) => i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i);
+      return [...c, { product: p, qty: 1 }];
+    });
+    setCartOpen(true);
+    setOrderSent(null);
+  };
+  const updateQty = (id: string, delta: number) => {
+    setCart((c) => c.map((i) => i.product.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i));
+  };
+  const removeItem = (id: string) => setCart((c) => c.filter((i) => i.product.id !== id));
 
   const submitQuote = (e: FormEvent) => {
     e.preventDefault();
@@ -179,11 +200,11 @@ function Index() {
 
   const submitOrder = (e: FormEvent) => {
     e.preventDefault();
-    if (!cart) return;
-    const ship = order.delivery === "Pobranie" ? 27 : 18;
-    const total = cart.price + ship;
-    const subject = `Zamówienie ${cart.name}`;
-    const body = `Zamówienie — MOBILZONE\n\nProdukt: ${cart.name}\nCena produktu: ${cart.price} zł\nDostawa: ${order.delivery} (${ship} zł)\nRAZEM: ${total} zł\n\nDane do wysyłki:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPłatność: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
+    if (cart.length === 0) return;
+    const orderNo = `MZ-${Date.now().toString().slice(-6)}`;
+    const itemsLines = cart.map((i) => `• ${i.product.name} × ${i.qty} = ${i.qty * i.product.price} zł`).join("\n");
+    const subject = `Zamówienie ${orderNo} — ${cartCount} szt., ${grandTotal} zł`;
+    const body = `Zamówienie — MOBILZONE\nNumer: ${orderNo}\n\nPRODUKTY:\n${itemsLines}\n\nSuma produktów: ${cartTotal} zł\nDostawa: ${order.delivery} (${shipping} zł)\nRAZEM DO ZAPŁATY: ${grandTotal} zł\n\nDANE DO WYSYŁKI:\n${order.fullName}\n${order.address}\n${order.postal} ${order.city}\nTel: ${order.phone}\nE-mail: ${order.email}\n\nPŁATNOŚĆ: ${order.payment}${order.payment === "BLIK" ? ` (kod: ${order.blik})` : ""}\n`;
     setOrderSent({ subject, body });
   };
 
@@ -205,9 +226,16 @@ function Index() {
             <a href="#opinie" className="hover:text-brand-accent transition-colors">Opinie</a>
             <a href="#kontakt" className="hover:text-brand-accent transition-colors">Kontakt</a>
           </div>
-          <a href="tel:508171201" className="px-5 py-2.5 bg-brand-accent text-brand-bg font-bold text-sm rounded-full hover:scale-105 transition-transform">
-            ZADZWOŃ TERAZ
-          </a>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setCartOpen(true)} className="relative px-4 py-2.5 border border-brand-text/20 hover:border-brand-accent font-bold text-sm rounded-full transition-colors flex items-center gap-2">
+              <span aria-hidden>🛒</span>
+              <span className="hidden sm:inline">KOSZYK</span>
+              {cartCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1 text-[11px] font-bold rounded-full bg-brand-accent text-brand-bg">{cartCount}</span>
+              )}
+            </button>
+            <a href="tel:508171201" className="hidden sm:inline-block px-5 py-2.5 bg-brand-accent text-brand-bg font-bold text-sm rounded-full hover:scale-105 transition-transform">ZADZWOŃ</a>
+          </div>
         </div>
       </nav>
 
@@ -319,7 +347,7 @@ function Index() {
                     <h3 className="font-display text-base font-bold mb-3 leading-tight">{a.name}</h3>
                     <div className="flex items-center justify-between">
                       <span className="font-display text-xl font-bold">{a.price} zł</span>
-                      <a href="tel:508171201" className="text-xs font-bold text-brand-accent hover:underline">ZAMÓW →</a>
+                      <button type="button" onClick={() => addToCart({ id: `acc-${selectedModel}-${i}`, name: `${a.name} (${phoneModels.find((m) => m.id === selectedModel)?.label ?? ""})`, category: "Akcesoria", price: a.price, image: a.image, desc: a.type })} className="text-xs font-bold text-brand-accent hover:underline">DO KOSZYKA →</button>
                     </div>
                   </div>
                 </article>
@@ -377,7 +405,7 @@ function Index() {
                   <p className="text-sm text-brand-text/50 mb-4">{p.desc}</p>
                   <div className="flex items-center justify-between">
                     <span className="font-display text-2xl font-bold">{p.price} zł</span>
-                    <button onClick={() => { setCart(p); setOrderSent(null); }} className="px-4 py-2 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg hover:scale-105 transition-transform">KUP TERAZ</button>
+                    <button onClick={() => addToCart(p)} className="px-4 py-2 bg-brand-accent text-brand-bg font-bold text-sm rounded-lg hover:scale-105 transition-transform">DO KOSZYKA</button>
                   </div>
                 </div>
               </article>
@@ -485,33 +513,76 @@ function Index() {
         </div>
       </footer>
 
+      {/* Cart drawer */}
+      {cartOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" onClick={() => setCartOpen(false)}>
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-brand-surface border-l border-brand-text/10 flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-brand-text/10">
+              <h3 className="font-display text-2xl font-bold uppercase">Koszyk ({cartCount})</h3>
+              <button onClick={() => setCartOpen(false)} className="size-10 rounded-full border border-brand-text/10 hover:border-brand-accent text-brand-text/60 hover:text-brand-accent">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {cart.length === 0 ? (
+                <p className="text-brand-text/40 text-sm text-center py-12">Twój koszyk jest pusty.</p>
+              ) : cart.map((i) => (
+                <div key={i.product.id} className="flex gap-4 p-3 bg-brand-bg/50 rounded-xl border border-brand-text/5">
+                  <img src={i.product.image} alt="" className="size-16 object-cover rounded-lg shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm leading-tight line-clamp-2">{i.product.name}</p>
+                    <p className="text-xs text-brand-text/40 mt-0.5">{i.product.price} zł / szt.</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button type="button" onClick={() => updateQty(i.product.id, -1)} className="size-7 rounded border border-brand-text/20 hover:border-brand-accent font-bold">−</button>
+                      <span className="w-6 text-center text-sm font-bold">{i.qty}</span>
+                      <button type="button" onClick={() => updateQty(i.product.id, 1)} className="size-7 rounded border border-brand-text/20 hover:border-brand-accent font-bold">+</button>
+                      <button type="button" onClick={() => removeItem(i.product.id)} className="ml-auto text-[11px] text-brand-text/40 hover:text-brand-accent">USUŃ</button>
+                    </div>
+                  </div>
+                  <p className="font-display font-bold text-brand-accent whitespace-nowrap">{i.qty * i.product.price} zł</p>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-brand-text/10 p-6 space-y-3">
+              <div className="flex justify-between text-sm text-brand-text/60"><span>Produkty</span><span>{cartTotal} zł</span></div>
+              <button type="button" disabled={cart.length === 0} onClick={() => { setCartOpen(false); setCheckoutOpen(true); setOrderSent(null); }} className="w-full px-6 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-[1.02] transition-transform disabled:opacity-40 disabled:hover:scale-100">ZAMÓW ({cartTotal} zł) →</button>
+              <p className="text-[10px] text-brand-text/40 text-center">Dostawę i metodę płatności wybierzesz w następnym kroku.</p>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Checkout modal */}
-      {cart && (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setCart(null)}>
+      {checkoutOpen && cart.length > 0 && (
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setCheckoutOpen(false)}>
           <div className="bg-brand-surface border border-brand-text/10 rounded-3xl max-w-2xl w-full my-8" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between p-6 border-b border-brand-text/10">
-              <div className="flex items-center gap-4">
-                <img src={cart.image} alt="" width={64} height={64} className="size-16 object-cover rounded-lg" />
-                <div>
-                  <p className="font-display font-bold">{cart.name}</p>
-                  <p className="text-brand-accent font-bold">{cart.price} zł</p>
-                </div>
+              <div>
+                <p className="text-[10px] font-bold tracking-widest uppercase text-brand-accent">Finalizacja zamówienia</p>
+                <p className="font-display text-xl font-bold">{cartCount} szt. · {cartTotal} zł</p>
               </div>
-              <button onClick={() => setCart(null)} className="size-10 rounded-full border border-brand-text/10 hover:border-brand-accent text-brand-text/60 hover:text-brand-accent">✕</button>
+              <button onClick={() => setCheckoutOpen(false)} className="size-10 rounded-full border border-brand-text/10 hover:border-brand-accent text-brand-text/60 hover:text-brand-accent">✕</button>
             </div>
             {orderSent ? (
               <div className="p-6 space-y-4">
                 <div className="text-center space-y-2">
                   <div className="text-5xl">✓</div>
-                  <h3 className="font-display text-2xl font-bold">Prawie gotowe!</h3>
-                  <p className="text-brand-text/60 text-sm">Wybierz, jak wysłać nam zamówienie. Skontaktujemy się i wyślemy paczkę w 24h.</p>
+                  <h3 className="font-display text-2xl font-bold">Zamówienie gotowe!</h3>
+                  <p className="text-brand-text/60 text-sm">Wybierz, jak wysłać potwierdzenie. Po otrzymaniu odezwiemy się i wyślemy paczkę w 24h.</p>
                 </div>
                 <SendPanel payload={orderSent} />
-                <button onClick={() => setCart(null)} className="w-full px-6 py-3 border border-brand-text/10 hover:border-brand-accent font-bold rounded-lg transition-colors">ZAMKNIJ</button>
+                <button onClick={() => { setCheckoutOpen(false); setCart([]); }} className="w-full px-6 py-3 border border-brand-text/10 hover:border-brand-accent font-bold rounded-lg transition-colors">ZAMKNIJ I WYCZYŚĆ KOSZYK</button>
               </div>
             ) : (
-              <form onSubmit={submitOrder} className="p-6 space-y-4">
-                <h3 className="font-display text-xl font-bold uppercase tracking-tight">Dane do wysyłki</h3>
+              <form onSubmit={submitOrder} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                <div className="space-y-2 p-4 bg-brand-bg/50 rounded-xl border border-brand-text/5">
+                  {cart.map((i) => (
+                    <div key={i.product.id} className="flex justify-between text-xs">
+                      <span className="truncate pr-2">{i.product.name} × {i.qty}</span>
+                      <span className="font-bold whitespace-nowrap">{i.qty * i.product.price} zł</span>
+                    </div>
+                  ))}
+                </div>
+
+                <h3 className="font-display text-xl font-bold uppercase tracking-tight pt-2">Dane do wysyłki</h3>
                 <Field label="Imię i nazwisko" value={order.fullName} onChange={(v) => setOrder({ ...order, fullName: v })} required />
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label="E-mail" type="email" value={order.email} onChange={(v) => setOrder({ ...order, email: v })} required />
@@ -529,12 +600,9 @@ function Index() {
                     { id: "Kurier", label: "Kurier (przedpłata)", price: 18 },
                     { id: "Pobranie", label: "Kurier za pobraniem", price: 27 },
                   ].map((d) => (
-                    <button
-                      type="button"
-                      key={d.id}
+                    <button type="button" key={d.id}
                       onClick={() => setOrder({ ...order, delivery: d.id, payment: d.id === "Pobranie" ? "Pobranie" : (order.payment === "Pobranie" ? "BLIK" : order.payment) })}
-                      className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors text-left ${order.delivery === d.id ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}
-                    >
+                      className={`px-3 py-3 rounded-lg border text-sm font-bold transition-colors text-left ${order.delivery === d.id ? "border-brand-accent bg-brand-accent/10 text-brand-accent" : "border-brand-text/10 text-brand-text/60 hover:border-brand-text/30"}`}>
                       <div>{d.label}</div>
                       <div className="text-xs opacity-70 mt-1">{d.price} zł</div>
                     </button>
@@ -550,21 +618,15 @@ function Index() {
                 {order.payment === "BLIK" && (
                   <Field label="6-cyfrowy kod BLIK" value={order.blik} onChange={(v) => setOrder({ ...order, blik: v.replace(/\D/g, "").slice(0, 6) })} required placeholder="123 456" />
                 )}
-                {order.payment === "Karta" && (
-                  <p className="text-xs text-brand-text/50">Po wysłaniu zamówienia otrzymasz link do bezpiecznej płatności kartą (Stripe / Przelewy24).</p>
-                )}
-                {order.payment === "Przelew" && (
-                  <p className="text-xs text-brand-text/50">Dane do przelewu wyślemy mailem od razu po złożeniu zamówienia.</p>
-                )}
-                {order.payment === "Pobranie" && (
-                  <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze paczki.</p>
-                )}
+                {order.payment === "Karta" && <p className="text-xs text-brand-text/50">Po wysłaniu zamówienia otrzymasz link do bezpiecznej płatności kartą.</p>}
+                {order.payment === "Przelew" && <p className="text-xs text-brand-text/50">Dane do przelewu wyślemy mailem od razu po złożeniu zamówienia.</p>}
+                {order.payment === "Pobranie" && <p className="text-xs text-brand-text/50">Zapłacisz kurierowi przy odbiorze paczki.</p>}
 
                 <div className="flex items-center justify-between pt-4 border-t border-brand-text/10">
                   <div>
                     <p className="text-xs uppercase tracking-widest text-brand-text/40">Razem</p>
-                    <p className="font-display text-2xl font-bold">{cart.price + (order.delivery === "Pobranie" ? 27 : 18)} zł</p>
-                    <p className="text-[10px] text-brand-text/40">w tym dostawa {order.delivery === "Pobranie" ? 27 : 18} zł</p>
+                    <p className="font-display text-2xl font-bold">{grandTotal} zł</p>
+                    <p className="text-[10px] text-brand-text/40">w tym dostawa {shipping} zł</p>
                   </div>
                   <button type="submit" className="px-8 py-4 bg-brand-accent text-brand-bg font-bold rounded-lg hover:scale-105 transition-transform">ZAMÓW I ZAPŁAĆ →</button>
                 </div>
