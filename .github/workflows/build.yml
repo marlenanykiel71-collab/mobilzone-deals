@@ -1,4 +1,4 @@
-name: Build Automatically
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,26 +6,23 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build the project
-        run: npm run build
+      - name: Prepare static site
+        run: |
+          mkdir -p site
+          cp public/.nojekyll site/.nojekyll
+          cp public/favicon.ico site/favicon.ico
+          cp public/placeholder.svg site/placeholder.svg
+          cp public/robots.txt site/robots.txt
+          cp public/index.html site/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./site
