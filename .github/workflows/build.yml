@@ -12,17 +12,24 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Prepare static site
-        run: |
-          mkdir -p site
-          cp public/.nojekyll site/.nojekyll
-          cp public/favicon.ico site/favicon.ico
-          cp public/placeholder.svg site/placeholder.svg
-          cp public/robots.txt site/robots.txt
-          cp public/index.html site/index.html
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Build static site
+        run: bun run build:static
+
+      - name: Ensure .nojekyll exists
+        run: touch dist-static/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+          publish_dir: ./dist-static
+          publish_branch: gh-pages
+          force_orphan: true
