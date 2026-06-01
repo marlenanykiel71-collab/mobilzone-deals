@@ -161,7 +161,7 @@ function SendPanel({ payload }: { payload: SendPayload }) {
   );
 }
 
-function Index() {
+export function Index() {
   const [quote, setQuote] = useState({ name: "", phone: "", email: "", model: "", damage: "", service: "Przyniosę osobiście", address: "" });
   const [quoteSent, setQuoteSent] = useState<SendPayload | null>(null);
   const [cart, setCart] = useState<{ product: Product; qty: number }[]>([]);
